@@ -1,166 +1,124 @@
-"""Export a web-friendly GLB of the Popuri store.
-
-Run inside an opened Popuri_Store.blend:
-    blender -b Popuri_Store.blend --python export_popuri_web.py
-
-- lights and cameras are excluded; the web viewer supplies its own lighting
-- text/curves are converted to meshes
-- procedural packaging materials are replaced with solid, exportable colours
-- glass is simplified for glTF; the viewer upgrades it to physical glass
-"""
-from __future__ import annotations
-
+"""Export a small, vertex-coloured GLB; keep both motorized doors independent."""
+from pathlib import Path
+from collections import defaultdict
 import hashlib
-import os
-
+import json
+import math
 import bpy
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "web", "Popuri_Store.glb")
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-
-# Clean selection and convert text/curve geometry to meshes.
-for obj in bpy.context.view_layer.objects:
-    obj.select_set(False)
-
-for obj in list(bpy.data.objects):
-    if obj.type in {"FONT", "CURVE"}:
-        try:
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.object.convert(target="MESH")
-            obj.select_set(False)
-        except Exception as exc:
-            print("CONVERT_FAIL", obj.name, exc)
-
-# Web-safe packaging palette.
-palette = [
-    (0.70, 0.055, 0.04), (0.92, 0.28, 0.035), (0.94, 0.66, 0.05),
-    (0.11, 0.38, 0.16), (0.04, 0.42, 0.50), (0.05, 0.17, 0.54),
-    (0.48, 0.06, 0.36), (0.86, 0.16, 0.34), (0.55, 0.63, 0.16),
-    (0.88, 0.84, 0.69), (0.20, 0.55, 0.72), (0.72, 0.38, 0.10),
-]
-
-
-def web_mat(idx):
-    name = f"WEB | Packaging {idx:02d}"
-    m = bpy.data.materials.get(name)
-    if m:
-        return m
-    col = palette[idx % len(palette)]
-    m = bpy.data.materials.new(name)
-    m.use_nodes = True
-    nt = m.node_tree
-    nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
-    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
-    bsdf.inputs["Base Color"].default_value = (*col, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.42
-    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
-    m.diffuse_color = (*col, 1.0)
-    return m
-
-
-WEB_PACKAGING = [web_mat(i) for i in range(len(palette))]
-
-# Replace the procedural packing material with a stable solid colour per object.
-for obj in bpy.data.objects:
-    if obj.type != "MESH":
+ROOT = Path(__file__).resolve().parent
+OUT = ROOT / "web" / "Popuri_Store.glb"
+scene = bpy.context.scene
+scene.frame_set(1)
+assert not any(o.name.startswith(("Clerk", "Figure", "Person", "Human")) for o in scene.objects)
+# The source .blend remains untouched; export changes only the background copy.
+for obj in list(scene.objects):
+    if obj.hide_render or obj.name.startswith(("Rooftop AC", "Roof vent", "Star")):
+        bpy.data.objects.remove(obj, do_unlink=True)
         continue
-    h = int(hashlib.md5(obj.name.encode("utf-8")).hexdigest()[:4], 16)
-    for slot in obj.material_slots:
-        mat = slot.material
-        if mat and mat.name.startswith("Packaging |"):
-            slot.material = WEB_PACKAGING[h % len(WEB_PACKAGING)]
+    if obj.type == "MESH":
+        # Tiny merchandise bevels dominate triangle count without affecting its silhouette.
+        for mod in list(obj.modifiers):
+            if obj.name.startswith(("Gondola", "Wall goods", "Cooler |", "Freezer | tub")):
+                obj.modifiers.remove(mod)
+            elif mod.type == 'BEVEL':
+                mod.segments = 1
+    elif obj.type in {"FONT", "CURVE"}:
+        obj.data.resolution_u = 2
+        obj.data.bevel_resolution = 0
+        if obj.type == "FONT":
+            obj.data.extrude = 0
+            obj.data.bevel_depth = 0
 
-# Simple, glTF-safe glass materials. The browser viewer replaces these with
-# MeshPhysicalMaterial and enables reflections / thickness.
-for obj in bpy.data.objects:
-    if obj.type != "MESH":
-        continue
-    for slot in obj.material_slots:
-        mat = slot.material
-        if not mat or not mat.name.startswith("Glass |"):
-            continue
-        key = "WEB | Glass freezer" if "freezer" in mat.name.lower() else "WEB | Glass storefront"
-        web = bpy.data.materials.get(key)
-        if web is None:
-            web = bpy.data.materials.new(key)
-            web.use_nodes = True
-            nt = web.node_tree
-            nt.nodes.clear()
-            out = nt.nodes.new("ShaderNodeOutputMaterial")
-            bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
-            bsdf.inputs["Base Color"].default_value = (0.72, 0.90, 0.88, 1.0) if "freezer" in key.lower() else (0.82, 0.94, 0.91, 1.0)
-            bsdf.inputs["Roughness"].default_value = 0.06
-            bsdf.inputs["Transmission Weight"].default_value = 0.0
-            bsdf.inputs["Alpha"].default_value = 0.24
-            nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
-            try:
-                web.surface_render_method = "DITHERED"
-            except Exception:
-                pass
-        slot.material = web
+palette = [(0.70,.055,.04),(.92,.28,.035),(.94,.66,.05),(.11,.38,.16),
+           (.04,.42,.50),(.05,.17,.54),(.48,.06,.36),(.86,.16,.34),
+           (.55,.63,.16),(.88,.84,.69),(.20,.55,.72),(.72,.38,.10)]
+materials = {}
+for key in ("Opaque", "Glow", "Glass"):
+    mat = bpy.data.materials.new("WEB_" + key)
+    mat.use_nodes = True
+    bsdf = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    bsdf.inputs["Base Color"].default_value = (1,1,1,1)
+    bsdf.inputs["Roughness"].default_value = .9
+    vertex = mat.node_tree.nodes.new("ShaderNodeVertexColor")
+    vertex.layer_name = "Color"
+    mat.node_tree.links.new(vertex.outputs["Color"], bsdf.inputs["Base Color"])
+    if key == "Glow":
+        mat.node_tree.links.new(vertex.outputs["Color"], bsdf.inputs["Emission Color"])
+        bsdf.inputs["Emission Strength"].default_value = 1
+    if key == "Glass":
+        bsdf.inputs["Alpha"].default_value = .14
+        mat.surface_render_method = "DITHERED"
+    materials[key] = mat
 
-# Select all renderable geometry. The site and stars are kept for the browser.
-for obj in bpy.context.view_layer.objects:
-    obj.select_set(obj.type == "MESH")
-bpy.context.view_layer.objects.active = next(
-    (o for o in bpy.context.selected_objects if o.type == "MESH"), None
-)
-# Apply all bevels/modifiers before joining so the web mesh keeps its edges.
-if bpy.context.view_layer.objects.active:
-    bpy.ops.object.convert(target="MESH")
+groups = defaultdict(list)
+deps = bpy.context.evaluated_depsgraph_get()
+source = [o for o in scene.objects if o.type in {"MESH", "FONT", "CURVE"}]
+source_triangles = 0
+for obj in source:
+    evaluated = obj.evaluated_get(deps)
+    mesh = bpy.data.meshes.new_from_object(evaluated, depsgraph=deps)
+    mesh.calc_loop_triangles()
+    source_triangles += len(mesh.loop_triangles)
+    slots = list(mesh.materials)
+    categories = set()
+    colours = []
+    for mat in slots:
+        name = mat.name if mat else ""
+        category = "Glass" if name.startswith("Glass |") else "Opaque"
+        colour = tuple(mat.diffuse_color[:3]) if mat else (.5,.5,.5)
+        if name.startswith("Packaging |"):
+            colour = palette[int(hashlib.md5(obj.name.encode()).hexdigest()[:4],16)%len(palette)]
+        if mat and mat.use_nodes:
+            bsdf = next((n for n in mat.node_tree.nodes if n.type=='BSDF_PRINCIPLED'),None)
+            if bsdf and bsdf.inputs['Emission Strength'].default_value > 0:
+                category = "Glow"
+                colour = tuple(bsdf.inputs['Emission Color'].default_value[:3])
+        colours.append((*colour,1))
+        categories.add(category)
+    assert len(categories) <= 1, (obj.name,categories)
+    category = next(iter(categories),"Opaque")
+    attr = mesh.color_attributes.new(name="Color",type='BYTE_COLOR',domain='CORNER')
+    for poly in mesh.polygons:
+        colour = colours[poly.material_index] if colours else (.5,.5,.5,1)
+        for loop in poly.loop_indices:
+            attr.data[loop].color = colour
+        poly.material_index = 0
+    mesh.materials.clear()
+    mesh.materials.append(materials[category])
+    mesh.transform(obj.matrix_world)
+    new = bpy.data.objects.new('Export_'+obj.name,mesh)
+    scene.collection.objects.link(new)
+    parent = obj.parent
+    if parent and parent.name in {"DoorLeft","DoorRight"}:
+        group = parent.name
+    elif obj.name.startswith(("Roof", "Dropped ceiling", "Ceiling light", "Ceiling speaker")):
+        group = "RoofGroup"
+    else:
+        group = f"Cell_{math.floor(obj.location.x/8)}_{math.floor(obj.location.y/8)}"
+    groups[(group,category)].append(new)
+for obj in source:
+    bpy.data.objects.remove(obj,do_unlink=True)
 
-meshes = [o for o in bpy.context.view_layer.objects if o.type == "MESH"]
-
-
-def is_glass(o):
-    return any(s.material and s.material.name.startswith("WEB | Glass") for s in o.material_slots)
-
-
-def join_group(objects, name):
-    objects = [o for o in objects if o and o.name in bpy.data.objects]
-    if not objects:
-        return None
-    bpy.ops.object.select_all(action="DESELECT")
-    for o in objects:
-        o.select_set(True)
-    bpy.context.view_layer.objects.active = objects[0]
-    bpy.ops.object.join()
-    result = bpy.context.view_layer.objects.active
-    result.name = name
-    return result
-
-
-stars = [o for o in meshes if o.name.startswith("Star")]
-roof = [o for o in meshes if o not in stars and not is_glass(o) and
-        o.name.startswith(("Roof", "Rooftop", "Dropped ceiling", "Ceiling light", "Ceiling speaker"))]
-glass = [o for o in meshes if is_glass(o) and o not in roof]
-store = [o for o in meshes if o not in stars and o not in roof and o not in glass]
-
-join_group(roof, "WEB | RoofGroup")
-join_group(stars, "WEB | Stars")
-join_group(glass, "WEB | Glass")
-join_group(store, "WEB | Store")
-
-for obj in bpy.context.view_layer.objects:
-    obj.select_set(obj.type == "MESH")
-
-bpy.context.view_layer.objects.active = next((o for o in bpy.context.selected_objects if o.type == "MESH"), None)
-
-bpy.ops.export_scene.gltf(
-    filepath=OUT,
-    export_format="GLB",
-    use_selection=True,
-    export_apply=True,
-    export_yup=True,
-    export_texcoords=False,
-    export_normals=True,
-    export_materials="EXPORT",
-    export_cameras=False,
-    export_lights=False,
-    export_animations=False,
-    export_draco_mesh_compression_enable=False,
-)
-print("WEB_GLB_OK", OUT, os.path.getsize(OUT))
+exported=[]
+for (group,category),objects in groups.items():
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in objects: obj.select_set(True)
+    bpy.context.view_layer.objects.active=objects[0]
+    if len(objects)>1: bpy.ops.object.join()
+    obj=bpy.context.view_layer.objects.active
+    obj.name=group+'_'+category
+    exported.append(obj)
+bpy.ops.object.select_all(action='DESELECT')
+for obj in exported: obj.select_set(True)
+bpy.context.view_layer.objects.active=exported[0]
+bpy.ops.export_scene.gltf(filepath=str(OUT),export_format='GLB',use_selection=True,
+    export_apply=True,export_yup=True,export_texcoords=False,export_normals=True,
+    export_materials='EXPORT',export_cameras=False,export_lights=False,
+    export_animations=False,export_draco_mesh_compression_enable=False)
+report={'triangles':source_triangles,'meshes':len(exported),'materials':3,'bytes':OUT.stat().st_size,
+        'door_travel':1.47,'door_center':[-3.55,1.5,4.43]}
+assert source_triangles < 400000,report
+assert all(any(o.name.startswith(side) for o in exported) for side in ('DoorLeft','DoorRight'))
+(ROOT/'web'/'model-stats.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+print('WEB_GLB_OK',report)

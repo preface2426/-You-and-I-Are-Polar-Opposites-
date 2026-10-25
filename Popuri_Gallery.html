@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Popuri 便利店 · 3D 交互空间</title>
 <style>
   :root {
@@ -274,6 +274,7 @@
     .render-links a { padding: 6px 9px; font-size: 10px; }
     #status { display: none; }
   }
+select { max-width: 172px; background:#252831; color:#f3f0e9; border:1px solid #666; padding:5px; border-radius:4px; }
 </style>
 </head>
 <body>
@@ -288,7 +289,7 @@
     </div>
   </div>
   <div class="top-right">
-    参考图重建 · Blender 5.4 / Cycles<br>
+    动画场景 · 实时自由视角<br>
     拖动旋转 · 滚轮缩放 · 右键平移
   </div>
 </header>
@@ -304,6 +305,7 @@
       <button data-preset="entrance">门口</button>
       <button data-preset="sign">招牌</button>
       <button data-preset="aerial">俯视</button>
+      <button data-preset="aisle">货架通道</button>
     </div>
   </section>
 
@@ -314,8 +316,8 @@
       <button data-time="night">夜间</button>
     </div>
     <div class="slider-row">
-      <div class="label"><span>曝光</span><output id="exposureVal">0.50</output></div>
-      <input id="exposure" type="range" min="0.35" max="2.2" step="0.01" value="0.50">
+      <div class="label"><span>曝光</span><output id="exposureVal">0.85</output></div>
+      <input id="exposure" type="range" min="0.35" max="2.2" step="0.01" value="0.85">
     </div>
     <div class="slider-row">
       <div class="label"><span>环境光</span><output id="ambientVal">1.00</output></div>
@@ -331,11 +333,14 @@
     <h2>显示</h2>
     <label class="check"><input id="roof" type="checkbox"> 隐藏屋顶 / 天花板</label>
     <label class="check"><input id="spin" type="checkbox"> 自动旋转</label>
+    <label class="check"><input id="fly" type="checkbox"> 自由移动（WASD / Q E / Shift）</label>
+    <label class="check">电动门 <select id="doorMode" aria-label="电动门模式"><option value="auto">靠近自动开门</option><option value="open">保持打开</option><option value="closed">保持关闭</option></select></label>
+    <label class="check">画质 <select id="quality" aria-label="画质"><option value="1">流畅</option><option value="1.5">清晰</option></select></label>
     <button id="reset" class="wide">复位视角</button>
   </section>
 
   <div class="help">
-    <b>快捷键</b>　1 全景 · 2 店内 · 3 收银台 · 4 门口 · 5 招牌 · D 日间 · N 夜间
+    <b>快捷键</b>　1 全景 · 2 店内 · 3 收银台 · 4 门口 · 5 招牌 · 6 通道 · D 日间 · N 夜间
   </div>
 </aside>
 <button id="showPanel">显示控制</button>
@@ -344,6 +349,7 @@
   <a href="renders/Popuri_Interior.png" target="_blank">店内渲染图</a>
   <a href="renders/Popuri_Checkout_Detail.png" target="_blank">收银台细节</a>
   <a href="renders/Popuri_Exterior_Night.png" target="_blank">夜景渲染图</a>
+  <a href="renders/Popuri_Aisle.png" target="_blank">通道渲染图</a>
 </div>
 <div id="status">正在载入场景…</div>
 
@@ -351,7 +357,7 @@
   <div class="spinner"></div>
   <h1>正在打开 POPURI</h1>
   <p id="loadingText">正在读取 3D 场景数据…</p>
-  <div class="percent">3D SHOWROOM · LOCAL FILE</div>
+  <div class="percent">POPURI · ANIME SCENE</div>
 </div>
 
 <div id="fail">
@@ -364,7 +370,7 @@
 <script src="web/vendor/OrbitControls.js"></script>
 <script src="web/vendor/GLTFLoader.js"></script>
 <script src="web/vendor/pako.min.js"></script>
-<script src="web/glb-data.js"></script>
+
 <script src="web/viewer.js"></script>
 </body>
 </html>

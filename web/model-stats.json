@@ -1,0 +1,12 @@
+{
+  "triangles": 68101,
+  "meshes": 78,
+  "materials": 3,
+  "bytes": 4583260,
+  "door_travel": 1.47,
+  "door_center": [
+    -3.55,
+    1.5,
+    4.43
+  ]
+}

@@ -132,9 +132,9 @@ M["concrete"] = material("Concrete | warm grey", (0.48, 0.47, 0.43), 0.78, bump_
 M["ceiling"] = material("Ceiling | satin white", (0.81, 0.80, 0.74), 0.48)
 M["trim"] = material("Trim | white enamel", (0.91, 0.90, 0.84), 0.32)
 M["trim_dark"] = material("Trim | graphite", (0.10, 0.12, 0.14), 0.35, metallic=0.35)
-M["floor"] = material("Floor | mint tile", (0.35, 0.48, 0.34), 0.20, coat=0.32,
+M["floor"] = material("Floor | mint tile", (0.40, 0.72, 0.37), 0.78, coat=0.0,
                       bump_scale=38, bump_strength=0.03)
-M["grout"] = material("Floor | grout", (0.17, 0.25, 0.17), 0.72)
+M["grout"] = material("Floor | grout", (0.19, 0.32, 0.17), 0.72)
 M["wood"] = material("Counter | honey wood", (0.44, 0.23, 0.11), 0.40, coat=0.22,
                      bump_scale=18, bump_strength=0.07)
 M["counter_top"] = material("Counter | warm white top", (0.84, 0.82, 0.75), 0.24, coat=0.3)
@@ -157,7 +157,7 @@ M["ceiling_light"] = material("Light | warm diffuser", (1.0, 0.91, 0.74), 0.26,
                               emission=(1.0, 0.84, 0.58), emission_strength=5.5)
 M["cold_light"] = material("Light | cold case", (0.54, 0.86, 1.0), 0.2,
                            emission=(0.30, 0.72, 1.0), emission_strength=3.5)
-M["asphalt"] = material("Site | asphalt", (0.115, 0.12, 0.12), 0.86,
+M["asphalt"] = material("Site | asphalt", (0.105, 0.145, 0.15), 0.86,
                         bump_scale=95, bump_strength=0.16)
 M["paint"] = material("Site | parking paint", (0.78, 0.78, 0.69), 0.55)
 M["kerb"] = material("Site | concrete kerb", (0.44, 0.43, 0.39), 0.8)
@@ -508,7 +508,7 @@ FLOOR = 0.0
 # ----------------------------------------------------------------------------
 # Foundation slab, slightly larger than the building.
 box("Foundation slab", (0, 0, -0.18), (W + 0.7, D + 0.7, 0.34), M["concrete"], C_ARCH, 0.025)
-box("Interior floor slab", (0, 0, -0.045), (W - 0.02, D - 0.02, 0.09), M["floor"], C_ARCH)
+box("Interior floor slab", (0, 0, -0.05), (W + 0.04, D + 0.04, 0.10), M["floor"], C_ARCH)
 # Tile grout lines on top of the floor, kept below 1 mm.
 tile = 1.08
 n_x = int(W / tile)
@@ -521,8 +521,8 @@ for i in range(1, n_y):
     box(f"Floor grout Y {i:02d}", (0, y, 0.002), (W - 0.04, 0.012, 0.004), M["grout"], C_ARCH)
 
 # Outer shell. Walls overlap at the corners (solid join, no cracks).
-box("Rear wall | structure", (0, Y1 + T / 2, H / 2), (W + 2 * T, T, H), M["wall_exterior"], C_ARCH)
-box("Left wall | structure", (X0 - T / 2, 0, H / 2), (T, D + 2 * T, H), M["wall_exterior"], C_ARCH)
+box("Rear wall | structure", (0, Y1 + T / 2, H / 2), (W + 2 * T, T + 0.04, H + 0.04), M["wall_exterior"], C_ARCH)
+box("Left wall | structure", (X0 - T / 2, 0, H / 2), (T + 0.04, D + 2 * T, H + 0.04), M["wall_exterior"], C_ARCH)
 box("Right rear wall | structure", (X1 + T / 2, (0.72 + Y1) / 2, H / 2),
     (T, Y1 - 0.72 + T, H), M["wall_exterior"], C_ARCH)
 
@@ -533,8 +533,8 @@ box("Right interior lining (rear)", (X1 - 0.012, (0.72 + Y1) / 2, H / 2),
     (0.024, Y1 - 0.72, H), M["wall"], C_ARCH)
 
 # Continuous dropped ceiling + roof cap. The ceiling closes onto all four walls.
-box("Dropped ceiling", (0, 0, H - 0.035), (W + 0.02, D + 0.02, 0.07), M["ceiling"], C_ARCH)
-box("Roof slab", (0, 0, H + 0.22), (W + 0.42, D + 0.42, 0.28), M["roof"], C_ARCH)
+box("Dropped ceiling", (0, 0, H - 0.035), (W + 2 * T + 0.04, D + 2 * T + 0.04, 0.09), M["ceiling"], C_ARCH)
+box("Roof slab", (0, 0, H + 0.10), (W + 0.50, D + 0.50, 0.28), M["roof"], C_ARCH)
 box("Roof parapet front", (0, Y0 - 0.15, H + 0.36), (W + 0.5, 0.18, 0.3), M["trim_dark"], C_ARCH, 0.015)
 box("Roof parapet back", (0, Y1 + 0.15, H + 0.36), (W + 0.5, 0.18, 0.3), M["trim_dark"], C_ARCH, 0.015)
 box("Roof parapet left", (X0 - 0.15, 0, H + 0.36), (0.18, D + 0.5, 0.3), M["trim_dark"], C_ARCH, 0.015)
@@ -678,37 +678,59 @@ light_area("Entrance | vestibule light", (DOOR_CENTER, DOOR_Y + 0.26, HEAD - 0.1
            (DOOR_CENTER, DOOR_Y + 0.05, 0.0), 24.0, 1.9, 0.18,
            (1.0, 0.82, 0.55), C_GLOW, 160)
 
-# Two sliding leaves. The right leaf is drawn half-open to the left, exposing
-# a clear opening; the two leaves run on separate front/rear tracks.
-LEAF_W = 1.38
-LEAF_GAP = 0.025
-leaf_specs = [
-    ("Entrance | leaf A", DOOR_L + LEAF_W / 2 + 0.035, DOOR_Y - 0.035, False),
-    ("Entrance | leaf B", DOOR_R - LEAF_W / 2 - 0.035 - 1.05, DOOR_Y + 0.035, True),
-]
-for name, cx, y, handle_right in leaf_specs:
-    glass_bottom, glass_top = 0.11, HEAD - 0.12
-    box(f"{name} glass", (cx, y, (glass_bottom + glass_top) / 2),
-        (LEAF_W - 0.12, 0.018, glass_top - glass_bottom), M["glass"], C_ARCH)
-    box(f"{name} bottom rail", (cx, y, 0.085), (LEAF_W, 0.075, 0.11), M["metal"], C_ARCH, 0.006)
-    box(f"{name} top rail", (cx, y, HEAD - 0.095), (LEAF_W, 0.075, 0.115), M["metal"], C_ARCH, 0.006)
-    for dx in (-LEAF_W / 2 + 0.045, LEAF_W / 2 - 0.045):
-        box(f"{name} stile {dx:+.2f}", (cx + dx, y, HEAD / 2),
-            (0.075, 0.075, HEAD), M["metal"], C_ARCH, 0.006)
-    hx = cx + (LEAF_W / 2 - 0.16 if handle_right else -LEAF_W / 2 + 0.16)
-    box(f"{name} handle", (hx, y - 0.06, 1.06), (0.045, 0.06, 0.56), M["metal"], C_ARCH, 0.012)
-    # subtle rubber weather seal on both vertical edges
-    for dx in (-LEAF_W / 2 + 0.008, LEAF_W / 2 - 0.008):
-        box(f"{name} seal {dx:+.2f}", (cx + dx, y, HEAD / 2), (0.018, 0.04, HEAD - 0.20),
-            M["rubber"], C_ARCH, 0.002)
-
-# Threshold, mats and door decal move with the entrance.
+# Bi-parting electric glass door. Leaves slide behind the fixed shopfront,
+# on an interior track clear of the portal jambs (no geometry in the passage).
+LEAF_W = DOOR_W / 2
+DOOR_TRAVEL = LEAF_W + 0.04
+DOOR_PLANE = DOOR_Y + 0.24
+controller = bpy.data.objects.new("AutomaticDoor", None)
+C_ARCH.objects.link(controller)
+controller["open"] = 0.0
+controller.id_properties_ui("open").update(min=0.0, max=1.0)
+controller["travel"] = DOOR_TRAVEL
+controller["sensor_center"] = (DOOR_CENTER, DOOR_PLANE, 1.5)
+for frame, value in ((1, 0), (25, 1), (85, 1), (109, 0), (144, 0)):
+    controller["open"] = float(value)
+    controller.keyframe_insert(data_path='["open"]', frame=frame)
+for side, direction in (("Left", -1), ("Right", 1)):
+    root = bpy.data.objects.new(f"Door{side}", None)
+    C_ARCH.objects.link(root)
+    root["direction"] = direction
+    root["travel"] = DOOR_TRAVEL
+    driver = root.driver_add("location", 0).driver
+    driver.expression = f"{direction * DOOR_TRAVEL} * opening"
+    var = driver.variables.new(); var.name = "opening"
+    var.targets[0].id = controller; var.targets[0].data_path = '["open"]'
+    cx = DOOR_CENTER + direction * LEAF_W / 2
+    before = set(bpy.data.objects)
+    name = f"Door{side} |"
+    box(f"{name} glass", (cx, DOOR_PLANE, HEAD / 2),
+        (LEAF_W - 0.10, 0.018, HEAD - 0.18), M["glass"], C_ARCH)
+    for z in (0.065, HEAD - 0.065):
+        box(f"{name} rail {z:.2f}", (cx, DOOR_PLANE, z),
+            (LEAF_W, 0.065, 0.13), M["metal"], C_ARCH, 0.004)
+    for dx in (-LEAF_W / 2 + 0.025, LEAF_W / 2 - 0.025):
+        box(f"{name} stile {dx:.2f}", (cx + dx, DOOR_PLANE, HEAD / 2),
+            (0.05, 0.065, HEAD), M["metal"], C_ARCH, 0.004)
+    box(f"{name} meeting seal", (DOOR_CENTER + direction * 0.006, DOOR_PLANE, HEAD / 2),
+        (0.012, 0.032, HEAD - 0.16), M["rubber"], C_ARCH)
+    box(f"{name} safety band", (cx, DOOR_PLANE - 0.016, 1.24),
+        (LEAF_W - 0.08, 0.006, 0.25), M["purple"], C_ARCH)
+    text(f"{name} decal", "自動ドア", (cx, DOOR_PLANE - 0.038, 1.65), 0.11,
+         M["white_sign"], C_SIGN, font=FONT_JP, extrude=0)
+    for part in set(bpy.data.objects) - before:
+        part.parent = root
+box("Entrance | electric motor housing", (DOOR_CENTER, DOOR_PLANE, HEAD + 0.075),
+    (2 * DOOR_W + 0.12, 0.20, 0.20), M["trim"], C_ARCH, 0.008)
+for y in (DOOR_PLANE - 0.12, DOOR_PLANE + 0.12):
+    box("Entrance | radar sensor", (DOOR_CENTER, y, HEAD + 0.07),
+        (0.24, 0.08, 0.08), M["metal_dark"], C_ARCH, 0.012)
 box("Entrance | exterior mat", (DOOR_CENTER, FY - 1.02, 0.057),
     (DOOR_W + 0.4, 1.65, 0.035), M["metal_dark"], C_SITE, 0.01)
 box("Entrance | interior mat", (DOOR_CENTER, DOOR_Y + 0.95, 0.018),
     (DOOR_W - 0.20, 1.35, 0.035), M["metal_dark"], C_INT, 0.01)
-text("Door decal", "自動ドア", (DOOR_CENTER, DOOR_Y - 0.095, 2.55), 0.10,
-     M["white_sign"], C_SIGN, font=FONT_JP, extrude=0.002)
+scene.frame_end = 144
+scene.frame_set(1)
 
 # Three recycling / waste bins outside, left of the sliding entrance, as in
 # the reference. They sit on a small concrete pad clear of the door swing.
@@ -858,16 +880,16 @@ for i, x in enumerate((-6.2, -3.8, -1.4, 1.0, 3.4, 5.8)):
 # ----------------------------------------------------------------------------
 # L-shaped checkout counter, matching the floor plan.
 MAIN_X = -5.65
-MAIN_Y = -0.70
-box("Checkout | main body", (MAIN_X, MAIN_Y, 0.48), (0.95, 4.30, 0.96), M["wood"], C_INT, 0.025)
-box("Checkout | main toe kick", (MAIN_X, MAIN_Y, 0.08), (0.80, 4.30, 0.16), M["metal_dark"], C_INT, 0.01)
-box("Checkout | main top", (MAIN_X, MAIN_Y, 0.995), (1.10, 4.44, 0.075), M["counter_top"], C_INT, 0.015)
-box("Checkout | return body", (-6.32, -2.85, 0.48), (2.28, 1.00, 0.96), M["wood"], C_INT, 0.025)
+MAIN_Y = -0.20
+box("Checkout | main body", (MAIN_X, MAIN_Y, 0.48), (0.95, 5.30, 0.96), M["orange"], C_INT, 0.025)
+box("Checkout | main toe kick", (MAIN_X, MAIN_Y, 0.08), (0.80, 5.30, 0.16), M["metal_dark"], C_INT, 0.01)
+box("Checkout | main top", (MAIN_X, MAIN_Y, 0.995), (1.10, 5.44, 0.075), M["counter_top"], C_INT, 0.015)
+box("Checkout | return body", (-6.32, -2.85, 0.48), (2.28, 1.00, 0.96), M["orange"], C_INT, 0.025)
 box("Checkout | return toe kick", (-6.32, -2.85, 0.08), (2.10, 0.86, 0.16), M["metal_dark"], C_INT, 0.01)
 box("Checkout | return top", (-6.32, -2.85, 0.995), (2.42, 1.13, 0.075), M["counter_top"], C_INT, 0.015)
 # Beveled customer-side panels.
-for i in range(4):
-    y = -2.45 + i * 0.95
+for i in range(5):
+    y = -2.40 + i * 0.98
     box(f"Checkout | front panel {i+1}", (MAIN_X + 0.481, y, 0.54), (0.016, 0.78, 0.56),
         M["orange"], C_INT, 0.008)
 for i in range(2):
@@ -890,57 +912,9 @@ box("Checkout | customer display", (MAIN_X + 0.43, -1.98, 1.30), (0.05, 0.30, 0.
 box("Checkout | basket", (MAIN_X - 0.02, -0.25, 1.10), (0.43, 0.33, 0.16), M["green"], C_INT, 0.02)
 # Under-counter wash light.
 box("Checkout | toe light", (MAIN_X + 0.50, -0.70, 0.17), (0.02, 3.9, 0.025), M["ceiling_light"], C_INT, 0.005)
-# Staff member behind the counter. Kept deliberately stylised and simple so
-# it reads at architectural-render distance without pretending to be a portrait.
-M_SKIN = material("Figure | skin", (0.72, 0.48, 0.35), 0.56)
-M_HAIR = material("Figure | pink hair", (0.73, 0.22, 0.40), 0.46)
-M_SHIRT = material("Figure | white shirt", (0.83, 0.82, 0.77), 0.6)
-M_APRON = material("Figure | green apron", (0.08, 0.23, 0.16), 0.6)
-M_TROUSERS = material("Figure | dark trousers", (0.07, 0.075, 0.08), 0.7)
-
-def add_staff():
-    px, py = -6.52, -0.55
-    # torso, hips and neck
-    box("Clerk | torso", (px, py, 1.12), (0.34, 0.30, 0.54), M_SHIRT, C_INT, 0.08, segments=4)
-    box("Clerk | apron", (px + 0.176, py, 1.05), (0.018, 0.28, 0.42), M_APRON, C_INT, 0.008)
-    box("Clerk | shoulders", (px, py, 1.35), (0.38, 0.33, 0.14), M_SHIRT, C_INT, 0.08, segments=3)
-    cyl("Clerk | neck", (px, py, 1.43), 0.07, 0.12, M_SKIN, C_INT, segments=18)
-    # head and hair mass
-    head = sphere("Clerk | head", (px + 0.01, py, 1.55), 0.155, M_SKIN, C_INT,
-                  scale=(1.0, 0.92, 1.05), subdiv=3)
-    sphere("Clerk | hair back", (px - 0.035, py, 1.60), 0.175, M_HAIR, C_INT,
-           scale=(0.95, 1.03, 0.95), subdiv=3)
-    sphere("Clerk | fringe", (px + 0.09, py - 0.055, 1.66), 0.115, M_HAIR, C_INT,
-           scale=(0.65, 0.95, 0.55), subdiv=3)
-    sphere("Clerk | hair side L", (px + 0.03, py - 0.145, 1.53), 0.085, M_HAIR, C_INT,
-           scale=(0.8, 0.8, 1.15), subdiv=3)
-    sphere("Clerk | hair side R", (px + 0.03, py + 0.145, 1.53), 0.085, M_HAIR, C_INT,
-           scale=(0.8, 0.8, 1.15), subdiv=3)
-    # simple face marks, scaled small enough to read as eyes at distance
-    for dy in (-0.058, 0.058):
-        sphere("Clerk | eye", (px + 0.148, py + dy, 1.57), 0.018, M["black"], C_INT,
-               scale=(0.55, 1.0, 0.8), subdiv=2)
-    sphere("Clerk | nose", (px + 0.158, py, 1.525), 0.018, M_SKIN, C_INT,
-           scale=(0.9, 0.7, 0.9), subdiv=2)
-    # arms: one hand on the scanner, one resting on the counter
-    curve_tube("Clerk | arm R", [(px + 0.12, py - 0.18, 1.34), (px + 0.22, py - 0.42, 1.20),
-                                  (-5.82, -1.02, 1.13)], 0.048, M_SHIRT, C_INT, resolution=3)
-    curve_tube("Clerk | arm L", [(px + 0.10, py + 0.18, 1.34), (px + 0.20, py + 0.22, 1.18),
-                                  (-5.95, 0.22, 1.10)], 0.048, M_SHIRT, C_INT, resolution=3)
-    sphere("Clerk | hand R", (-5.82, -1.02, 1.13), 0.055, M_SKIN, C_INT, scale=(1, 1, 0.8), subdiv=2)
-    sphere("Clerk | hand L", (-5.95, 0.22, 1.10), 0.055, M_SKIN, C_INT, scale=(1, 1, 0.8), subdiv=2)
-    box("Clerk | name badge", (px + 0.20, py + 0.10, 1.26), (0.012, 0.08, 0.04),
-        M["white_sign"], C_INT, 0.003)
-    for obj in C_INT.objects:
-        if obj.name.startswith("Clerk") and obj.type == "MESH":
-            for poly in obj.data.polygons:
-                poly.use_smooth = True
-
-add_staff()
-
 # Back bar behind the checkout (against the left wall).
-box("Back bar | cabinet", (X0 + 0.34, -1.55, 0.80), (0.56, 2.15, 1.60), M["wood"], C_INT, 0.018)
-box("Back bar | top", (X0 + 0.36, -1.55, 1.64), (0.62, 2.25, 0.08), M["counter_top"], C_INT, 0.012)
+box("Back bar | cabinet", (X0 + 0.34, -0.60, 0.80), (0.56, 4.20, 1.60), M["wood"], C_INT, 0.018)
+box("Back bar | top", (X0 + 0.36, -0.60, 1.64), (0.62, 4.30, 0.08), M["counter_top"], C_INT, 0.012)
 box("Back bar | header", (X0 + 0.30, -1.55, 2.24), (0.38, 2.3, 0.38), M["red"], C_INT, 0.012)
 text("Back bar | header text", "POPURI", (X0 + 0.482, -1.55, 2.24), 0.15,
      M["white_sign"], C_INT, rot=(math.pi / 2, 0, math.pi / 2), font=FONT_LATIN, extrude=0.003)
@@ -966,45 +940,10 @@ M_STEEL = material("Metal | food equipment", (0.56, 0.58, 0.59), 0.22, metallic=
 M_WARM = material("Light | heat lamp", (1.0, 0.40, 0.10), 0.25,
                   emission=(1.0, 0.22, 0.04), emission_strength=2.4)
 
-# Hot dog roller grill on the return counter, in full view of the entrance.
-HOT_X, HOT_Y = -5.65, -2.30
 HOT_BASE_Z = 1.033
-box("Hotdog grill | base", (HOT_X, HOT_Y, HOT_BASE_Z + 0.08),
-    (0.70, 0.48, 0.16), M_STEEL, C_INT, 0.022)
-box("Hotdog grill | drip tray", (HOT_X, HOT_Y - 0.20, HOT_BASE_Z + 0.035),
-    (0.62, 0.16, 0.03), M["metal_dark"], C_INT, 0.004)
-box("Hotdog grill | rear wall", (HOT_X, HOT_Y + 0.22, HOT_BASE_Z + 0.26),
-    (0.68, 0.035, 0.22), M_STEEL, C_INT, 0.008)
-for side in (-1, 1):
-    box(f"Hotdog grill | side {side}", (HOT_X + side * 0.335, HOT_Y, HOT_BASE_Z + 0.27),
-        (0.03, 0.46, 0.25), M_STEEL, C_INT, 0.008)
-for i in range(7):
-    x = HOT_X - 0.245 + i * 0.0817
-    cyl(f"Hotdog grill | roller {i+1}", (x, HOT_Y, HOT_BASE_Z + 0.23), 0.022, 0.40,
-        M_STEEL, C_INT, segments=18, rot=(math.radians(90), 0, 0))
-for i, dx in enumerate((-0.185, -0.062, 0.062, 0.185)):
-    cyl(f"Hotdog grill | sausage {i+1}", (HOT_X + dx, HOT_Y, HOT_BASE_Z + 0.265),
-        0.032, 0.35, M_SAUSAGE, C_INT, segments=18, rot=(math.radians(90), 0, 0))
-# Glass sneeze guard: top and sides, open at the customer side.
-box("Hotdog grill | glass top", (HOT_X, HOT_Y + 0.01, HOT_BASE_Z + 0.43),
-    (0.66, 0.40, 0.012), M["glass"], C_INT)
-for side in (-1, 1):
-    box(f"Hotdog grill | glass side {side}", (HOT_X + side * 0.325, HOT_Y + 0.01, HOT_BASE_Z + 0.35),
-        (0.010, 0.40, 0.18), M["glass"], C_INT)
-box("Hotdog grill | glass front", (HOT_X, HOT_Y - 0.215, HOT_BASE_Z + 0.37),
-    (0.64, 0.010, 0.20), M["glass"], C_INT, rot=(math.radians(10), 0, 0))
-box("Hotdog grill | heat lamp", (HOT_X, HOT_Y + 0.08, HOT_BASE_Z + 0.405),
-    (0.52, 0.035, 0.012), M_WARM, C_INT, 0.003)
-box("Hotdog grill | front plate", (HOT_X, HOT_Y - 0.252, HOT_BASE_Z + 0.10),
-    (0.62, 0.012, 0.14), M["metal_dark"], C_INT, 0.006)
-text("Hotdog grill | sign", "HOT SNACK", (HOT_X, HOT_Y - 0.262, HOT_BASE_Z + 0.105), 0.10,
-     M["white_sign"], C_INT, font=FONT_LATIN, extrude=0.002)
-# Tongs resting on the side.
-box("Hotdog grill | tongs", (HOT_X + 0.36, HOT_Y - 0.06, HOT_BASE_Z + 0.18),
-    (0.025, 0.20, 0.02), M_STEEL, C_INT, 0.004, rot=(0, math.radians(20), 0))
 
 # Hot snack warmer at the right end of the return counter.
-WARM_X, WARM_Y = -6.72, -2.86
+WARM_X, WARM_Y = MAIN_X, 0.65
 box("Snack warmer | base", (WARM_X, WARM_Y, HOT_BASE_Z + 0.08),
     (0.52, 0.50, 0.16), M_STEEL, C_INT, 0.02)
 # Four thin glass panels rather than a solid glass block, so the food reads.
@@ -1030,7 +969,7 @@ text("Snack warmer | sign", "HOT", (WARM_X, WARM_Y - 0.255, HOT_BASE_Z + 0.07), 
      M["white_sign"], C_INT, font=FONT_LATIN, extrude=0.002)
 
 # Coffee station on the main checkout counter, beside the register.
-CF_X, CF_Y, CF_Z = MAIN_X + 0.02, 0.52, 1.033
+CF_X, CF_Y, CF_Z = X0 + 0.36, 0.65, 1.68
 box("Coffee machine | body", (CF_X, CF_Y, CF_Z + 0.29),
     (0.52, 0.44, 0.58), M["metal_dark"], C_INT, 0.028)
 box("Coffee machine | face", (CF_X + 0.266, CF_Y, CF_Z + 0.31),
@@ -1081,9 +1020,73 @@ for i, dy in enumerate((-0.22, -0.13, -0.04)):
     cyl(f"Coffee | syrup cap {i+1}", (CF_X - 0.40, CF_Y + 0.62 + dy, CF_Z + 0.205), 0.022, 0.025,
         M["metal_dark"], C_INT, segments=12)
 
+# Face the POS toward customers down the aisle; keep all components together.
+from mathutils import Matrix
+pos_pivot = Vector((MAIN_X - 0.10, -1.55, 0))
+turn = Matrix.Rotation(math.pi / 2, 4, 'Z')
+for obj in list(C_INT.objects):
+    if obj.name.startswith(("Checkout | register", "Checkout | screen face")):
+        obj.location = pos_pivot + turn.to_3x3() @ (obj.location - pos_pivot)
+        obj.rotation_euler = (turn.to_3x3() @ obj.rotation_euler.to_matrix()).to_euler()
+# Taller red-rimmed hot-food cabinet to the right of the register.
+for obj in list(C_INT.objects):
+    if obj.name.startswith("Snack warmer |"):
+        obj.location.z = HOT_BASE_Z + (obj.location.z - HOT_BASE_Z) * 1.75
+        obj.scale.z *= 1.75
+        dx, dy = obj.location.x - WARM_X, obj.location.y - WARM_Y
+        obj.location.x, obj.location.y = WARM_X - dy, WARM_Y + dx
+        obj.rotation_euler.z += math.pi / 2
+        if obj.name.startswith(("Snack warmer | base", "Snack warmer | top frame")):
+            obj.data.materials.clear(); obj.data.materials.append(M["red"])
+for dz in (0.0, 0.90):
+    box(f"Snack warmer | red rim {dz}", (WARM_X, WARM_Y, HOT_BASE_Z + dz),
+        (0.54, 0.56, 0.065), M["red"], C_INT, 0.008)
+# Brown curved hot-food showcase beside the red upright cabinet.
+CASE_X, CASE_Y, CASE_Z = MAIN_X, 1.70, 1.033
+M_CASE = material("Food case | brown frame", (0.40,0.21,0.12),0.8)
+box("Curved food case | plinth", (CASE_X,CASE_Y,CASE_Z+0.04),
+    (0.72,1.22,0.08),M_CASE,C_INT,0.008)
+profile=[(0.34,0.08),(0.34,0.42),(0.32,0.55),(0.27,0.66),
+         (0.18,0.74),(0.06,0.79),(-0.12,0.81),(-0.34,0.81)]
+vertices=[(CASE_X+x,CASE_Y+y,CASE_Z+z) for y in (-.58,.58) for x,z in profile]
+faces=[(i,i+1,i+1+len(profile),i+len(profile)) for i in range(len(profile)-1)]
+mesh=bpy.data.meshes.new("Curved food case glazing")
+mesh.from_pydata(vertices,[],faces);mesh.materials.append(M["glass"])
+obj=bpy.data.objects.new("Curved food case | curved glazing",mesh);C_INT.objects.link(obj)
+for y in (-.60,.60):
+    curve_tube(f"Curved food case | arched frame {y}",
+        [(CASE_X+x,CASE_Y+y,CASE_Z+z) for x,z in profile],.022,M_CASE,C_INT)
+    box(f"Curved food case | glass end {y}",(CASE_X,CASE_Y+y,CASE_Z+.43),
+        (.60,.009,.65),M["glass"],C_INT)
+for level in range(3):
+    z=CASE_Z+.16+level*.21
+    box(f"Curved food case | shelf {level}",(CASE_X-.015,CASE_Y,z),
+        (.59,1.13,.018),M["shelf"],C_INT)
+    box(f"Curved food case | shelf rim {level}",(CASE_X+.29,CASE_Y,z),
+        (.035,1.16,.045),M_CASE,C_INT)
+    for j in range(5):
+        sphere(f"Curved food case | snack {level}-{j}",
+            (CASE_X+.05,CASE_Y-.44+j*.22,z+.055),.07,
+            M_BUN if level%2==0 else M["orange"],C_INT,scale=(1,.9,.6),subdiv=2)
+for y in (-.34,.32):
+    curve_tube(f"Curved food case | highlight {y}",
+        [(CASE_X+.347,CASE_Y+y-.1,CASE_Z+.16),
+         (CASE_X+.347,CASE_Y+y+.1,CASE_Z+.43)],.012,M["white_sign"],C_INT)
+# Reference POS has a pale enclosure and an unlit grey display.
+M_POS=material("POS | grey display",(.18,.20,.25),.8,
+    emission=(.18,.20,.25),emission_strength=.7)
+for obj in C_INT.objects:
+    if obj.name.startswith(("Checkout | register base","Checkout | register neck","Checkout | register screen")):
+        obj.data.materials.clear();obj.data.materials.append(M["trim"])
+    elif obj.name.startswith("Checkout | screen face"):
+        obj.data.materials.clear();obj.data.materials.append(M_POS)
+# Pale paper cups on the back worktop, as visible behind the register.
+for y in (-1.9,-1.55):
+    cyl(f"Back bar | cup sleeve {y}",(X0+.41,y,1.91),.055,.40,M["paper"],C_INT,segments=16)
+
 # Left wall shelving, starting behind the checkout.
 RACK_X = X0 + 0.30
-RACK_Y0, RACK_Y1 = -0.10, 4.43
+RACK_Y0, RACK_Y1 = 1.90, 4.43
 box("Left wall rack | base", (RACK_X + 0.21, (RACK_Y0 + RACK_Y1) / 2, 0.12),
     (0.62, RACK_Y1 - RACK_Y0, 0.24), M["shelf"], C_INT, 0.012)
 box("Left wall rack | back", (RACK_X + 0.02, (RACK_Y0 + RACK_Y1) / 2, 1.16),
@@ -1092,9 +1095,9 @@ for i, z in enumerate((0.35, 0.74, 1.13, 1.52, 1.91)):
     box(f"Left wall rack | shelf {i+1}", (RACK_X + 0.31, (RACK_Y0 + RACK_Y1) / 2, z),
         (0.54, RACK_Y1 - RACK_Y0 - 0.04, 0.06), M["shelf"], C_INT, 0.006)
     box(f"Left wall rack | price rail {i+1}", (RACK_X + 0.585, (RACK_Y0 + RACK_Y1) / 2, z + 0.02),
-        (0.026, RACK_Y1 - RACK_Y0 - 0.06, 0.075), M["pink_glow"], C_INT, 0.003)
+        (0.026, RACK_Y1 - RACK_Y0 - 0.06, 0.075), M["shelf"], C_INT, 0.003)
     for j in range(21):
-        y = RACK_Y0 + 0.14 + j * 0.205
+        y = RACK_Y0 + 0.14 + j * (RACK_Y1 - RACK_Y0 - 0.28) / 20
         w = random.uniform(0.090, 0.180)
         h = random.uniform(0.120, 0.255)
         depth = random.uniform(0.140, 0.240)
@@ -1114,7 +1117,7 @@ def gondola(name, cx, cy, length=6.75, width=1.18, height=1.58):
             box(f"{name} | side {side} shelf {t+1}", (cx, shelf_y, z),
                 (length - 0.08, 0.55, 0.045), M["shelf"], C_INT, 0.005)
             box(f"{name} | side {side} price rail {t+1}", (cx, cy + side * 0.567, z + 0.018),
-                (length - 0.10, 0.026, 0.075), M["pink_glow"], C_INT, 0.003)
+                (length - 0.10, 0.026, 0.075), M["shelf"], C_INT, 0.003)
             # goods, facing outwards; dense mixed packaging
             n = 31
             for j in range(n):
@@ -1174,8 +1177,8 @@ def gondola(name, cx, cy, length=6.75, width=1.18, height=1.58):
         box(f"{name} | shelf talker stripe {j+1}", (x, cy - 0.612, height + 0.09),
             (0.36, 0.006, 0.04), GOODS[j % len(GOODS)], C_INT, 0.002)
 
-gondola("Gondola A", 2.90, 0.95, width=1.05)
-gondola("Gondola B", 2.90, 3.15, width=1.05)
+gondola("Gondola A", 2.90, -0.95, width=1.05)
+gondola("Gondola B", 2.90, 1.25, width=1.05)
 
 # Ice-cream freezer: long low case at the front-right of the plan.
 FREEZE_X0, FREEZE_X1 = 1.75, 7.20
@@ -1397,14 +1400,15 @@ text("Back wall | brand text", "P O P U R I", (-3.15, Y1 - 0.075, 2.88), 0.22,
 # ----------------------------------------------------------------------------
 # Exterior site, parking, truck, utility pole, houses, trees, stars
 # ----------------------------------------------------------------------------
-box("Site | asphalt forecourt", (0, -12.6, -0.10), (46, 28, 0.18), M["asphalt"], C_SITE)
+box("Site | asphalt forecourt", (0, -6.6, -0.10), (46, 24, 0.18), M["asphalt"], C_SITE)
 box("Site | road", (0, -22.8, -0.12), (70, 7.5, 0.20), M["asphalt"], C_SITE)
 box("Site | sidewalk", (0, -18.75, 0.01), (46, 1.9, 0.24), M["concrete"], C_SITE, 0.02)
 box("Site | store apron", (0, -5.75, -0.06), (25, 2.5, 0.20), M["concrete"], C_SITE, 0.015)
 box("Site | curb", (0, -19.72, 0.02), (46, 0.22, 0.24), M["kerb"], C_SITE, 0.01)
 box("Site | grass verge", (0, 8.6, -0.11), (55, 9, 0.19), M["grass"], C_SITE)
 box("Site | grass right", (18, -1, -0.11), (14, 28, 0.19), M["grass"], C_SITE)
-box("Road | centre line", (0, -23.0, -0.005), (66, 0.12, 0.02), M["paint"], C_SITE)
+box("Road | near edge", (0, -19.2, -0.005), (66, 0.12, 0.02), M["paint"], C_SITE)
+box("Road | far edge", (0,-26.3,-0.005),(66,0.10,0.02),M["paint"],C_SITE)
 for i in range(10):
     box(f"Road | dash {i+1}", (-30 + i * 6.4, -23.0, -0.004), (2.0, 0.12, 0.02), M["paint"], C_SITE)
 
@@ -1465,12 +1469,12 @@ box("Parking | arrow head 2", (-9.15, -13.88, 0.006), (0.9, 0.18, 0.022), M["pai
     rot=(0, 0, math.radians(-88)))
 
 # Fence and hedge along the right boundary.
-for i, y in enumerate((-12.0, -9.2, -6.4, -3.6, -0.8, 2.0, 4.8)):
+for i, y in enumerate((-21.4, -18.1, -14.8, -11.5, -8.2, -4.9, -1.6, 1.7, 5.0)):
     box(f"Fence | post {i+1}", (10.9, y, 1.05), (0.09, 0.09, 2.1), M["metal_dark"], C_SITE, 0.012)
 for i, z in enumerate((0.40, 1.16, 1.92)):
-    box(f"Fence | rail {i+1}", (10.9, -3.6, z), (0.06, 17.4, 0.06), M["metal_dark"], C_SITE, 0.006)
-for i in range(19):
-    y = -12.0 + i * 0.93
+    box(f"Fence | rail {i+1}", (10.9, -8.2, z), (0.06, 26.4, 0.06), M["metal_dark"], C_SITE, 0.006)
+for i in range(29):
+    y = -21.4 + i * 0.93
     sphere(f"Hedge {i+1}", (11.55, y, 0.72), 0.58, M["hedge"], C_SITE,
            scale=(1.0, 0.78, 0.86), subdiv=1)
 
@@ -1505,18 +1509,17 @@ light_area("Night | lot fill", (0, -12.0, 8.0), (0, -11.0, 0.0), 110.0, 22.0, 14
 
 # Low-poly neighbouring houses and trees, mainly seen as silhouettes.
 houses = [
-    ((-15.8, 6.4), (4.8, 4.4, 5.2), 0.3),
-    ((-9.0, 9.3), (5.3, 4.0, 4.4), 0.1),
-    ((1.2, 10.5), (4.6, 4.2, 4.8), -0.12),
-    ((9.8, 9.0), (4.1, 3.7, 4.1), 0.18),
+    ((-17.8, 10.0), (6.2, 5.4, 6.2), 0.0),
+    ((-9.7, 10.5), (6.5, 5.2, 6.0), 0.0),
+    ((-1.3, 10.8), (6.0, 5.4, 6.5), 0.0),
+    ((7.0, 10.8), (6.0, 5.1, 6.1), 0.0),
+    ((-25.0, -1.0), (5.0, 6.0, 6.2), 0.0),
+    ((-25.0, -10.0), (5.0, 6.0, 5.8), 0.0),
 ]
 for i, ((hx, hy), (sx, sy, sz), rot) in enumerate(houses):
     box(f"House {i+1} | body", (hx, hy, sz / 2 - 0.05), (sx, sy, sz), M["house"], C_SITE, 0.02, rot=(0, 0, rot))
-    # gabled roof made from a rotated box (two slanted slabs)
-    for side in (-1, 1):
-        box(f"House {i+1} | roof {side}", (hx + side * sx * 0.25, hy, sz + 0.57),
-            (sx * 0.62, sy + 0.35, 0.10), M["roof"], C_SITE, 0.015,
-            rot=(0, side * math.radians(28), rot))
+    box(f"House {i+1} | flat roof", (hx,hy,sz+0.08),
+        (sx+0.3,sy+0.3,0.22),M["roof"],C_SITE,0.01)
     for j, (wx, wz) in enumerate(((-sx * 0.24, sz * 0.58), (sx * 0.20, sz * 0.55))):
         box(f"House {i+1} | window {j+1}", (hx + wx, hy - sy / 2 - 0.012, wz),
             (0.72, 0.025, 0.82), M["warm_window"], C_SITE, 0.005)
@@ -1533,7 +1536,7 @@ for i, x in enumerate((-7.85, 7.80)):
     sphere(f"Planter {i+1} shrub", (x, -5.65, 0.65), 0.38, M["hedge"], C_SITE, scale=(1, 1, 0.8), subdiv=2)
 
 # Delivery truck at the left of the lot, headlamps on.
-truck_x, truck_y = -12.9, -10.2
+truck_x, truck_y = -12.9, -22.4
 box("Truck | cargo body", (truck_x - 0.9, truck_y, 2.30), (4.8, 2.35, 2.55), M["trim"], C_SITE, 0.05)
 box("Truck | cargo side panel", (truck_x - 0.9, truck_y - 1.185, 2.35), (4.4, 0.025, 2.05), M["metal"], C_SITE, 0.012)
 box("Truck | side stripe", (truck_x - 0.9, truck_y - 1.201, 2.02), (4.15, 0.012, 0.12), M["purple_glow"], C_SITE, 0.004)
@@ -1561,6 +1564,56 @@ light_spot("Truck | right headlight", (truck_x + 2.98, truck_y + 0.82, 1.18),
 # Tail lamps.
 box("Truck | tail lamp L", (truck_x - 3.32, truck_y - 0.92, 1.15), (0.03, 0.12, 0.11), M["red"], C_SITE, 0.01)
 box("Truck | tail lamp R", (truck_x - 3.32, truck_y + 0.92, 1.15), (0.03, 0.12, 0.11), M["red"], C_SITE, 0.01)
+
+# Continuous neighbourhood ground and masonry boundaries close the site.
+box("Neighbourhood | ground", (0, 0, -0.25), (160, 160, 0.18), M["asphalt"], C_SITE)
+box("Boundary | rear wall", (0, 7.0, 0.84), (43.0, 0.22, 1.8), M["concrete"], C_SITE)
+box("Boundary | rear cap", (0, 7.0, 1.77), (43.12, 0.30, 0.12), M["trim_dark"], C_SITE)
+box("Boundary | left wall", (-21.4, -3.9, 0.84), (0.24, 22.0, 1.8), M["concrete"], C_SITE)
+for i in range(43):
+    box(f"Boundary | vertical mortar {i}", (-21 + i, 6.883, 0.82),
+        (0.012, 0.008, 1.72), M["grout"], C_SITE)
+for z in (0.25, 0.65, 1.05, 1.45):
+    box(f"Boundary | horizontal mortar {z}", (0, 6.88, z),
+        (43, 0.008, 0.012), M["grout"], C_SITE)
+# Roof panel lines are paint on an unbroken slab.
+for x in (-5.0, -2.5, 0, 2.5, 5.0):
+    box(f"Roof | panel line {x}", (x, 0, H + 0.241),
+        (0.018, D - 0.2, 0.006), M["trim_dark"], C_ARCH)
+for y in (-2.4, 0, 2.4):
+    box(f"Roof | panel crossline {y}", (0, y, H + 0.242),
+        (W - 0.2, 0.018, 0.006), M["trim_dark"], C_ARCH)
+# A tall 24-hour roadside sign and a second utility pole frame the forecourt.
+box("Road sign | pole", (-16.4, -3.1, 3.5), (0.16, 0.16, 7.0), M["metal_dark"], C_SITE)
+box("Road sign | frame", (-16.4, -3.1, 6.5), (1.5, 0.22, 1.65), M["trim"], C_SITE, 0.02)
+box("Road sign | purple face", (-16.4, -3.225, 6.5), (1.30, 0.02, 1.45), M["purple_glow"], C_SITE)
+text("Road sign | 24", "24", (-16.4, -3.25, 6.58), 0.75, M["sign_letter"], C_SITE, font=FONT_LATIN, extrude=0)
+text("Road sign | hours", "HOURS", (-16.4, -3.25, 6.02), 0.13, M["white_sign"], C_SITE, font=FONT_LATIN, extrude=0)
+# Truck cabin, mirrors, wheel arches, grille and freight corrugation.
+for yy in (-0.94, 0.94):
+    box(f"Truck | cab side glass {yy}", (truck_x + 2.27, truck_y + yy, 2.0),
+        (0.90, 0.022, 0.64), M["ice_blue"], C_SITE, 0.02)
+    box(f"Truck | mirror {yy}", (truck_x + 2.9, truck_y + yy * 1.43, 1.9),
+        (0.14, 0.12, 0.25), M["metal_dark"], C_SITE, 0.025)
+    curve_tube(f"Truck | mirror arm {yy}", [(truck_x+2.9,truck_y+yy,1.7),
+               (truck_x+3.02,truck_y+yy*1.43,1.8)],0.025,M["metal_dark"],C_SITE)
+for z in (0.8, 0.9, 1.0):
+    box(f"Truck | grille {z}", (truck_x + 3.021, truck_y, z),
+        (0.02, 1.6, 0.035), M["black"], C_SITE)
+for i in range(24):
+    box(f"Truck | corrugation {i}", (truck_x - 3.02 + i * 0.18, truck_y - 1.203, 2.5),
+        (0.025, 0.012, 1.55), M["trim_dark"], C_SITE)
+for i, ((hx, hy), (sx, sy, sz), rot) in enumerate(houses):
+    for row in (0.9, 3.1):
+        for wx in (-sx*0.23, sx*0.23):
+            box(f"House detail {i} | window frame {wx} {row}", (hx+wx,hy-sy/2-0.05,row),
+                (0.95,0.08,0.95),M["trim_dark"],C_SITE)
+            box(f"House detail {i} | lit curtain {wx} {row}", (hx+wx,hy-sy/2-0.10,row),
+                (0.75,0.025,0.76),M["warm_window"] if (i+int(row))%3 else M["ice_blue"],C_SITE)
+            box(f"House detail {i} | mullion {wx} {row}", (hx+wx,hy-sy/2-0.12,row),
+                (0.045,0.04,0.8),M["trim_dark"],C_SITE)
+            box(f"House detail {i} | sill {wx} {row}", (hx+wx,hy-sy/2-0.16,row-0.5),
+                (1.12,0.28,0.11),M["concrete"],C_SITE)
 
 # Rooftop air-conditioning units, visible in the high exterior view.
 for i, (x, y, sx, sy, sz) in enumerate(((-4.1, 0.8, 1.55, 1.05, 0.72), (0.3, -0.3, 1.15, 0.85, 0.55),
@@ -1591,6 +1644,20 @@ for i in range(110):
 # ----------------------------------------------------------------------------
 # Lighting rigs: day and night
 # ----------------------------------------------------------------------------
+# Align the POS with the end of the customer aisle seen in the references.
+for obj in C_INT.objects:
+    if obj.name.startswith(("Checkout | register", "Checkout | screen face",
+            "Checkout | receipt printer", "Checkout | scanner", "Checkout | card terminal",
+            "Checkout | customer display")):
+        obj.location.y += 1.0
+    elif obj.name == "Checkout | basket":
+        obj.location.y += 0.20
+
+# Keep the copier clear of the full left-door sweep.
+for obj in C_INT.objects:
+    if obj.name.startswith("Printer |"):
+        obj.location.y += 0.22
+
 # Day - luminaire group is enabled and a sky/sun rig is added.
 sun_data = bpy.data.lights.new("Sun | day", "SUN")
 sun_data.energy = 7.0
@@ -1675,30 +1742,18 @@ def camera(name, loc, target, lens):
     aim(obj, target)
     return obj
 
-cam_int = camera("CAM | interior hero", (4.40, -0.70, 1.72), (-5.00, -4.30, 1.28), 20.0)
-cam_ext = camera("CAM | exterior night", (16.6, -23.0, 10.6), (-0.5, -0.4, 2.25), 37.0)
+cam_int = camera("CAM | interior hero", (-0.5, 2.0, 3.05), (-5.2, -1.9, 1.05), 23.0)
+cam_ext = camera("CAM | exterior night", (18.0, -48.0, 27.0), (-3.2, -9.2, 0.8), 40.0)
+cam_ext.data.type = "ORTHO"
+cam_ext.data.ortho_scale = 43
 cam_sign = camera("CAM | storefront detail", (10.5, -15.5, 3.0), (-0.3, -4.9, 3.3), 42.0)
 cam_checkout = camera("CAM | checkout machines", (-3.20, -3.90, 1.80), (-6.70, -0.40, 1.20), 28.0)
+cam_aisle = camera("CAM | aisle reference", (3.1, 0.15, 1.58), (-5.65, 0.15, 1.3), 31.0)
 scene.camera = cam_int
 
 # ----------------------------------------------------------------------------
 # Render / colour setup
 # ----------------------------------------------------------------------------
-scene.render.engine = "CYCLES"
-scene.cycles.device = "GPU"
-scene.cycles.samples = 96
-scene.cycles.use_adaptive_sampling = True
-scene.cycles.adaptive_threshold = 0.025
-scene.cycles.use_denoising = True
-scene.cycles.max_bounces = 8
-scene.cycles.diffuse_bounces = 4
-scene.cycles.glossy_bounces = 4
-scene.cycles.transmission_bounces = 8
-scene.cycles.transparent_max_bounces = 12
-scene.cycles.volume_bounces = 2
-scene.cycles.use_light_tree = True
-scene.cycles.blur_glossy = 1.0
-
 scene.render.resolution_x = 1920
 scene.render.resolution_y = 1080
 scene.render.resolution_percentage = 100
@@ -1715,18 +1770,6 @@ try:
 except Exception:
     pass
 scene.view_settings.exposure = -0.2
-
-# GPU backend: CUDA is available even when this driver's OptiX runtime is not.
-prefs = bpy.context.preferences.addons["cycles"].preferences
-prefs.compute_device_type = "CUDA"
-prefs.refresh_devices()
-for d in prefs.devices:
-    d.use = d.type == "CUDA"
-scene.cycles.device = "GPU"
-
-# Compositor is intentionally left out of the build: Blender 5.4 replaced the
-# old scene node tree, and the physical Cycles lighting already carries the
-# neon falloff. Bloom can be added in post if required.
 
 # Store useful custom props for the render helper.
 scene["popuri_day_exposure"] = -0.2
@@ -1755,5 +1798,11 @@ if track:
 scene.world = world_day
 scene.camera = cam_int
 scene.render.filepath = os.path.join(ROOT, "renders", "Popuri_Interior.png")
+import sys
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from popuri_style import apply_style
+apply_style()
+scene.frame_set(25)
 bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
 print("POPURI_BUILD_OK", BLEND_PATH)

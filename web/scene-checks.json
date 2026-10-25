@@ -1,0 +1,8 @@
+{
+  "noPeople": true,
+  "shellJointsOverlap": true,
+  "doorTravelMeters": 1.47,
+  "clearDoorwayMeters": 2.75,
+  "truckOnRoad": true,
+  "referenceEquipmentOrder": true
+}

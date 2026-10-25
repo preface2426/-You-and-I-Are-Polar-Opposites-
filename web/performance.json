@@ -1,0 +1,25 @@
+{
+  "conditions": "Chrome headless, Windows, 1400x850, pixel ratio 1, four seconds auto-orbit; indicative measurement, not a frame-rate guarantee.",
+  "baseline": {
+    "loadSeconds": 2.43,
+    "fourSecondMotion": {
+      "frames": 85,
+      "callsPerFrame": 82,
+      "trianglesPerFrame": 1421056
+    },
+    "errors": []
+  },
+  "optimized": {
+    "gpu": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A78B) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "loadSeconds": 0.33,
+    "fourSecondMotionFrames": 349,
+    "motionFPS": 87.2,
+    "calls": 68,
+    "triangles": 67505,
+    "idleFramesPerHalfSecond": 0,
+    "browserErrors": []
+  },
+  "offlineJsBytesBefore": 21048593,
+  "offlineJsBytesAfter": 891289,
+  "httpGlbCheck": "passed; binary loaded directly, embedded fallback not requested"
+}

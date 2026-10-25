@@ -7,3 +7,4 @@ web/Popuri_Store.glb.gz
 *.blend1
 !archive/versions/**/*.blend1
 .qa/
+renders/*_preview.png

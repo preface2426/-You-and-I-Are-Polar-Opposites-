@@ -1,10 +1,11 @@
-﻿import gzip, base64, os, json
-src = r'D:\Projects\Blender\web\Popuri_Store.glb'
-dst = r'D:\Projects\Blender\web\Popuri_Store.glb.gz'
-with open(src,'rb') as f: raw=f.read()
-with gzip.open(dst,'wb',compresslevel=9) as f: f.write(raw)
-with open(dst,'rb') as f: comp=f.read()
-b64=base64.b64encode(comp).decode('ascii')
-js = 'window.POPURI_GLB_GZIP_BASE64 = "' + b64 + '";\n'
-with open(r'D:\Projects\Blender\web\glb-data.js','w',encoding='ascii') as f: f.write(js)
-print('RAW',len(raw),'GZ',len(comp),'B64',len(b64),'JS',os.path.getsize(r'D:\Projects\Blender\web\glb-data.js'))
+"""Prepare the offline file:// fallback; HTTP viewers load the GLB directly."""
+from pathlib import Path
+import base64
+import gzip
+root=Path(__file__).resolve().parent
+raw=(root/'web'/'Popuri_Store.glb').read_bytes()
+compressed=gzip.compress(raw,compresslevel=9,mtime=0)
+assert gzip.decompress(compressed)==raw
+out=root/'web'/'glb-data.js'
+out.write_text('window.POPURI_GLB_GZIP_BASE64 = "'+base64.b64encode(compressed).decode('ascii')+'";\n',encoding='ascii')
+print('GLB',len(raw),'OFFLINE_JS',out.stat().st_size)
