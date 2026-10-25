@@ -1806,8 +1806,17 @@ scene.render.filepath = os.path.join(ROOT, "renders", "Popuri_Interior.png")
 import sys
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
-from popuri_style import apply_style
-apply_style()
+from popuri_checkout import apply_checkout_layout
+# Manual edits are the authoritative base for subsequent shelving changes.
+user_base = os.path.join(ROOT, 'archive', 'user-edits-20261025-224643', 'Popuri_Store.blend')
+if os.path.isfile(user_base):
+    bpy.ops.wm.open_mainfile(filepath=user_base)
+    scene = bpy.context.scene
+    apply_checkout_layout()
+else:
+    apply_checkout_layout()
+    from popuri_style import apply_style
+    apply_style()
 scene.frame_set(25)
 bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
 print("POPURI_BUILD_OK", BLEND_PATH)

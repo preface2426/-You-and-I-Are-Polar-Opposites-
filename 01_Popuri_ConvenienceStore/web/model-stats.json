@@ -1,8 +1,8 @@
 {
-  "triangles": 68101,
+  "triangles": 66285,
   "meshes": 78,
   "materials": 3,
-  "bytes": 4583900,
+  "bytes": 4582324,
   "door_travel": 1.47,
   "door_center": [
     -3.55,

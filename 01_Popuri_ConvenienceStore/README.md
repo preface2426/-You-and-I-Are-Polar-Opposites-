@@ -6,7 +6,7 @@
 
 **推荐：双击 `打开实时场景.cmd`。** 启动本机 Blender 的 EEVEE 实时场景，无需另装引擎。右侧 `POPURI` 面板可以切换昼夜与店外、店内、通道、设备视角。点击 **自由漫游（WASD）** 进入步行视角（会先切换为透视视图），WASD 移动、鼠标转头、滚轮调速；左键确认，Esc 退出。也可从“视图 → 导航 → 步行导航”进入。
 
-电动玻璃门会感应当前视点：接近到 3 米内且视点高度低于 3.2 米，左右两扇分别向外滑动 1.47 米；离开后延时 1.6 秒关闭。可取消“靠近自动开门”后用开合滑块检查。门扇位于门框内侧，复印机已移出滑动范围。
+电动玻璃门会感应当前视点：接近到 3 米内且视点高度低于 3.2 米，左右两扇分别向外滑动 1.47 米；离开后延时 1.6 秒关闭。可取消“靠近自动开门”后用开合滑块检查。用户手动移动后的复印机位置已保留，目前与左门轨道、竖框有相交，检查报告已记录。
 
 **轻量网页：双击 `Popuri_Gallery.html`。** 保持 `web/` 与 HTML 同目录，可完全离线打开。拖动旋转、滚轮缩放、右键平移；勾选“自由移动”后点击画面，WASD / Q E 移动升降，Shift 加速。电动门支持自动、保持打开、保持关闭。网页材质采用简化的卡通着色；Blender 实时版与最终静态图使用同一套 EEVEE 动画材质。
 
@@ -17,7 +17,9 @@
 - 卡车在店前道路左侧，车头沿道路方向；道路与店面平行，停车场在两者之间。
 - 后方和左侧住宅位于连续围墙之外，右侧围栏沿停车场延伸到路边。
 - 顾客面对收银台时，白灰色 POS 在左，红色立式热食柜和棕框弧面展示柜在右；咖啡设备放在后工作台。
-- 按最新参考图，POS 整组向左移 0.95 米，咖啡机及附件移至后工作台左端；后方壁挂货架连同商品、招牌向右移 1.50 米、升高 0.30 米，避开咖啡机。
+- POS 与咖啡机保持靠左。按最新参考图，后方改为五层深色分格小商品架及两块广告牌，降低后工作台，使商品在收银屏幕后方可见；80 个小商品保留紧密分区。
+- 两侧长货架向收银区靠近 2.80 米，并向两侧各让开 0.20 米；前端采用开放陈列和浅蓝招牌，补上近收银区的竖装商品。中央净通道超过 1.40 米，收银台前横向通道超过 1.30 米。
+- 用户于 22:46 保存的手动修改完整保存在 [用户基线](archive/user-edits-20261025-224643/README.md)。购物篮、复印机、L 形台、门垫、招牌等修改与删除均已保留；重建时先载入该基线，再更新货架。
 - 两排货架围出朝向收银台的通道，提供对应参考图的检查视角。
 - 当前工程与导出模型均无人物。原始归档保留旧文件原貌，可能含原有店员。
 - 墙角、地基、天花板和屋面采用实质搭接；降低屋面补上原先顶部间隙，门口保留真实开口。
@@ -32,7 +34,7 @@
 | `打开实时场景.cmd` / `Open_Popuri.ps1` | 启动 EEVEE 实时场景与视点感应门 |
 | `Popuri_Gallery.html` / `web/` | 离线轻量自由视角查看器 |
 | `renders/` | 最终室内、收银设备、夜景、店面、货架通道 PNG |
-| `popuri_build.py` / `popuri_style.py` | 重建几何与动画材质 |
+| `popuri_build.py` / `popuri_style.py` / `popuri_checkout.py` | 保留手动修改基线后重建货架布局与动画材质 |
 | `popuri_live.py` | Blender 实时昼夜、视角与自动门 |
 | `popuri_render.py` / `render_final.ps1` | 渲染指定视角 / 重渲染全部成图 |
 | `export_popuri_web.py` / `gzip_glb.py` | 精简 GLB 与离线压缩数据 |
@@ -47,6 +49,7 @@
 ```powershell
 blender -b --python-exit-code 1 --python popuri_build.py
 blender -b Popuri_Store.blend --python-exit-code 1 --python tests/verify_scene.py
+blender -b Popuri_Store.blend --python-exit-code 1 --python tests/verify_user_edits.py
 blender -b Popuri_Store.blend --python-exit-code 1 --python tests/verify_live.py
 blender -b Popuri_Store.blend --python-exit-code 1 --python export_popuri_web.py
 python gzip_glb.py

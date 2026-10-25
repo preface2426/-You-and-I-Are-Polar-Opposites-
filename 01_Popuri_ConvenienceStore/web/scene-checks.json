@@ -6,5 +6,18 @@
   "truckOnRoad": true,
   "referenceEquipmentOrder": true,
   "checkoutLeftPlacement": true,
-  "raisedDisplayClearsCoffee": true
+  "backRackStockPacks": 80,
+  "checkoutCrossAisleMeters": 1.3,
+  "gondolaAisleMeters": 1.4,
+  "shelvingClearsMachines": true,
+  "preservedUserPrinterDoorContacts": [
+    [
+      "DoorLeft | rail 0.07",
+      "Printer | cabinet"
+    ],
+    [
+      "DoorLeft | stile -0.69",
+      "Printer | cabinet"
+    ]
+  ]
 }

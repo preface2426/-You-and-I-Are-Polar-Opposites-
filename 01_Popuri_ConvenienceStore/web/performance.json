@@ -11,15 +11,15 @@
   },
   "optimized": {
     "gpu": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A78B) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-    "loadSeconds": 0.67,
-    "fourSecondMotionFrames": 339,
-    "motionFPS": 84.8,
+    "loadSeconds": 0.6,
+    "fourSecondMotionFrames": 327,
+    "motionFPS": 81.8,
     "calls": 67,
-    "triangles": 67373,
+    "triangles": 65393,
     "idleFramesPerHalfSecond": 0,
     "browserErrors": []
   },
   "offlineJsBytesBefore": 21048593,
-  "offlineJsBytesAfter": 891141,
+  "offlineJsBytesAfter": 877873,
   "httpGlbCheck": "passed; binary loaded directly, embedded fallback not requested"
 }
