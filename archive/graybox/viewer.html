@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convenience Store Graybox</title>
+  <style>
+    :root { color-scheme: dark; font: 14px/1.45 system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1b2026; color: #e8edf2; }
+    canvas { display: block; }
+    #panel { position: fixed; z-index: 1; top: 16px; left: 16px; max-width: 320px; padding: 14px 16px; border: 1px solid #ffffff22; border-radius: 10px; background: #111820dd; backdrop-filter: blur(8px); }
+    h1 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 5px 0; color: #c1ccd6; }
+    button { margin-top: 8px; padding: 7px 10px; color: inherit; background: #293744; border: 1px solid #ffffff30; border-radius: 6px; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    #status { position: fixed; left: 16px; bottom: 14px; padding: 7px 10px; background: #111820cc; border-radius: 6px; color: #c1ccd6; }
+    kbd { padding: 1px 4px; border: 1px solid #ffffff40; border-radius: 4px; color: #fff; }
+  </style>
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <section id="panel">
+    <h1>Convenience Store · Graybox</h1>
+    <p>Drag: orbit · Scroll: zoom · Right-drag: pan</p>
+    <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>: move · <kbd>Q</kbd>/<kbd>E</kbd>: down/up</p>
+    <button id="reset">Reset view</button>
+    <button id="door-toggle" disabled>Open automatic doors</button>
+    <button id="roof-toggle" disabled>Hide roof to inspect interior</button>
+    <button id="glass-toggle" disabled>Hide front glass to inspect interior</button>
+  </section>
+  <div id="status">Loading convenience_store_graybox.glb…</div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1b2026);
+    const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 500);
+    const initialPosition = new THREE.Vector3(10, 19, 34);
+    const initialTarget = new THREE.Vector3(-2, 1.7, 1);
+    camera.position.copy(initialPosition);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xcbd9e8, 0x303944, 2.0));
+    const key = new THREE.DirectionalLight(0xffffff, 2.0);
+    key.position.set(-15, 30, -20);
+    scene.add(key);
+    // glTF does not carry Blender area lights, so mirror the store lighting here.
+    const addPoint = (x, y, z, color, intensity, distance) => {
+      const light = new THREE.PointLight(color, intensity, distance, 2);
+      light.position.set(x, y, z);
+      scene.add(light);
+    };
+    for (const x of [-5.5, 0.5, 6.5]) {
+      for (const z of [2.7, -2.2]) addPoint(x, 3.8, z, 0xffefd2, 28, 17);
+    }
+    for (const x of [-7, -3.8, 2.8, 7]) addPoint(x, 3.5, 5.6, 0xffdfa7, 45, 13);
+    addPoint(0, 4.0, 5.8, 0xff3da8, 22, 9);
+    for (const [x, z] of [[-15, 12], [14, 11], [14, -2]]) addPoint(x, 6.4, z, 0xd5e6ff, 75, 25);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(initialTarget);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.minDistance = 5;
+    controls.maxDistance = 150;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    const status = document.querySelector('#status');
+    let roofObject;
+    let doorMixer;
+    let doorActions = [];
+    let doorsOpen = false;
+    const doorToggle = document.querySelector('#door-toggle');
+    const roofToggle = document.querySelector('#roof-toggle');
+    const glassToggle = document.querySelector('#glass-toggle');
+    new GLTFLoader().load('./convenience_store_graybox.glb', (gltf) => {
+      scene.add(gltf.scene);
+      if (gltf.animations.length) {
+        doorMixer = new THREE.AnimationMixer(gltf.scene);
+        doorActions = gltf.animations.map((clip) => {
+          const action = doorMixer.clipAction(clip);
+          action.setLoop(THREE.LoopOnce, 1);
+          action.clampWhenFinished = true;
+          action.play();
+          action.paused = true;
+          return action;
+        });
+        doorToggle.disabled = false;
+      }
+      doorToggle.addEventListener('click', () => {
+        for (const action of doorActions) {
+          action.reset();
+          action.time = doorsOpen ? action.getClip().duration : 0;
+          action.timeScale = doorsOpen ? -1 : 1;
+          action.paused = false;
+          action.play();
+        }
+        doorsOpen = !doorsOpen;
+        doorToggle.textContent = doorsOpen ? 'Close automatic doors' : 'Open automatic doors';
+      });
+      roofObject = gltf.scene.getObjectByName('Store | roof slab');
+      roofToggle.disabled = !roofObject;
+      roofToggle.addEventListener('click', () => {
+        roofObject.visible = !roofObject.visible;
+        roofToggle.textContent = roofObject.visible ? 'Hide roof to inspect interior' : 'Show roof';
+      });
+      const frontGlass = [];
+      gltf.scene.traverse((object) => {
+        if (object.name.startsWith('Front glazing') || object.name.startsWith('Entrance | glass sliding leaf') || object.name.startsWith('Entrance | leaf ')) frontGlass.push(object);
+      });
+      glassToggle.disabled = frontGlass.length === 0;
+      let glassVisible = true;
+      glassToggle.addEventListener('click', () => {
+        glassVisible = !glassVisible;
+        frontGlass.forEach((object) => { object.visible = glassVisible; });
+        glassToggle.textContent = glassVisible ? 'Hide front glass to inspect interior' : 'Show front glass';
+      });
+      status.textContent = 'Model loaded';
+      setTimeout(() => status.remove(), 2200);
+    }, undefined, (error) => {
+      console.error(error);
+      status.textContent = 'Could not load GLB. See the instructions in the chat.';
+    });
+
+    document.querySelector('#reset').addEventListener('click', () => {
+      camera.position.copy(initialPosition);
+      controls.target.copy(initialTarget);
+      controls.update();
+    });
+
+    const keys = new Set();
+    addEventListener('keydown', (e) => {
+      if (['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE'].includes(e.code)) { keys.add(e.code); e.preventDefault(); }
+    });
+    addEventListener('keyup', (e) => keys.delete(e.code));
+    addEventListener('blur', () => keys.clear());
+
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      if (doorMixer) doorMixer.update(clock.getDelta());
+      const step = 0.18 * Math.max(1, controls.target.distanceTo(camera.position) / 18);
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      forward.normalize();
+      right.crossVectors(forward, camera.up).normalize();
+      const delta = new THREE.Vector3();
+      if (keys.has('KeyW')) delta.addScaledVector(forward, step);
+      if (keys.has('KeyS')) delta.addScaledVector(forward, -step);
+      if (keys.has('KeyD')) delta.addScaledVector(right, step);
+      if (keys.has('KeyA')) delta.addScaledVector(right, -step);
+      if (keys.has('KeyE')) delta.y += step;
+      if (keys.has('KeyQ')) delta.y -= step;
+      camera.position.add(delta);
+      controls.target.add(delta);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
+
