@@ -26,5 +26,12 @@
     "saved_local": "2026-10-25T14:03:15",
     "sha256": "502cccdc066f916a22f28f252418ba7cf51f1a3ea356e6adb8719c47498386fa",
     "bytes": 456845
+  },
+  {
+    "order": 5,
+    "file": "archive/versions/05/ConvenienceStore_ClearAisles.blend",
+    "saved_local": "2026-10-25T14:03:28",
+    "sha256": "15aab430afb7403fc1324490d74efbf074ffd181317f957702183380833e8abc",
+    "bytes": 444231
   }
 ]
