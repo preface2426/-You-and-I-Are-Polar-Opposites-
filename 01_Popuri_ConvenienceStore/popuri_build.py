@@ -930,6 +930,11 @@ for tier in range(4):
 # Small LED strip under the back-bar header.
 box("Back bar | light strip", (X0 + 0.49, -1.55, 2.045), (0.02, 2.15, 0.025), M["ceiling_light"], C_INT, 0.004)
 
+# Raise the wall display and move it right in the customer-facing view.
+for obj in list(C_INT.objects) + list(C_GOODS.objects):
+    if obj.name.startswith(("Back bar | header", "Back bar | shelf", "Back bar | pack", "Back bar | light strip")):
+        obj.location += Vector((0, 1.50, 0.30))
+
 # ----------------------------------------------------------------------------
 # Checkout machines: hot-food roller grill, coffee station and snack warmer
 # ----------------------------------------------------------------------------
@@ -968,8 +973,8 @@ box("Snack warmer | warm lamp", (WARM_X, WARM_Y + 0.13, HOT_BASE_Z + 0.46),
 text("Snack warmer | sign", "HOT", (WARM_X, WARM_Y - 0.255, HOT_BASE_Z + 0.07), 0.085,
      M["white_sign"], C_INT, font=FONT_LATIN, extrude=0.002)
 
-# Coffee station on the main checkout counter, beside the register.
-CF_X, CF_Y, CF_Z = X0 + 0.36, 0.65, 1.68
+# Coffee station at the left end of the back worktop, behind the register.
+CF_X, CF_Y, CF_Z = X0 + 0.36, -1.80, 1.68
 box("Coffee machine | body", (CF_X, CF_Y, CF_Z + 0.29),
     (0.52, 0.44, 0.58), M["metal_dark"], C_INT, 0.028)
 box("Coffee machine | face", (CF_X + 0.266, CF_Y, CF_Z + 0.31),
@@ -1649,7 +1654,7 @@ for obj in C_INT.objects:
     if obj.name.startswith(("Checkout | register", "Checkout | screen face",
             "Checkout | receipt printer", "Checkout | scanner", "Checkout | card terminal",
             "Checkout | customer display")):
-        obj.location.y += 1.0
+        obj.location.y += 0.05
     elif obj.name == "Checkout | basket":
         obj.location.y += 0.20
 

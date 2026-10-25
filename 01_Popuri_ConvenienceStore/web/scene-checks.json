@@ -4,5 +4,7 @@
   "doorTravelMeters": 1.47,
   "clearDoorwayMeters": 2.75,
   "truckOnRoad": true,
-  "referenceEquipmentOrder": true
+  "referenceEquipmentOrder": true,
+  "checkoutLeftPlacement": true,
+  "raisedDisplayClearsCoffee": true
 }

@@ -46,6 +46,12 @@ assert road[1][0]<truck.location.y<road[1][1]
 assert all(o.location.y>7 for o in scene.objects if o.name.startswith('House ') and o.name.endswith('| body') and o.location.x>-21)
 assert bpy.data.objects['Snack warmer | base'].location.y>bpy.data.objects['Checkout | register base'].location.y
 assert bpy.data.objects['Coffee machine | body'].location.x<bpy.data.objects['Checkout | register base'].location.x
-report={'noPeople':True,'shellJointsOverlap':True,'doorTravelMeters':1.47,'clearDoorwayMeters':2.75,'truckOnRoad':True,'referenceEquipmentOrder':True}
+coffee=bounds(bpy.data.objects['Coffee machine | body'])
+register=bounds(bpy.data.objects['Checkout | register base'])
+assert coffee[1][1]<-.9 and register[1][1]<-.9,'Machines must stay at the left end'
+assert abs(coffee[2][0]-bounds(bpy.data.objects['Back bar | top'])[2][1])<.002
+assert bounds(bpy.data.objects['Back bar | shelf 1'])[1][0]>coffee[1][1]+.25,'Wall display must clear the coffee machine'
+assert bounds(bpy.data.objects['Back bar | header'])[2][0]>coffee[2][1]+.05
+report={'noPeople':True,'shellJointsOverlap':True,'doorTravelMeters':1.47,'clearDoorwayMeters':2.75,'truckOnRoad':True,'referenceEquipmentOrder':True,'checkoutLeftPlacement':True,'raisedDisplayClearsCoffee':True}
 (ROOT/'web'/'scene-checks.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
 print('SCENE_CHECKS_OK',report)
