@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.log
+recordings/
+renders/raw/
+web/Popuri_Store.glb.gz
+*.blend1
+!archive/versions/**/*.blend1
+.qa/
