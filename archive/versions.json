@@ -47,5 +47,12 @@
     "saved_local": "2026-10-25T14:12:20",
     "sha256": "eb1a3619bdc5c73624e54992a258906dda5e8a936071e2f27557d2f95a9146d3",
     "bytes": 445408
+  },
+  {
+    "order": 8,
+    "file": "archive/versions/08/ConvenienceStore_Final.blend1",
+    "saved_local": "2026-10-25T14:41:11",
+    "sha256": "1496a4f452e629e903222ff9b2ea55dd654b9edc19f7a1b9af7f43d2542f8427",
+    "bytes": 460323
   }
 ]
