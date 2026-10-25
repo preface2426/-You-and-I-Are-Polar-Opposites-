@@ -1,0 +1,17 @@
+{
+  "noPeople": true,
+  "railGaugeMeters": 1.067,
+  "wheelContact": true,
+  "heroCameraClear": true,
+  "pantographContact": true,
+  "activeDoorLeaves": 16,
+  "oppositeSideStaysClosed": true,
+  "doorTravelMeters": 0.69,
+  "boardingPanelsClearPlatform": true,
+  "stairSamplesChecked": 36,
+  "stairHeadroomMinMeters": 2.05,
+  "aisleSamplesChecked": 17,
+  "upperStairSamplesChecked": 26,
+  "platformSidePassageSamples": 142,
+  "visibleFeatures": "blue exterior belt / green seats / orange floor / triangular grips"
+}

@@ -1,0 +1,10 @@
+{
+  "viewport": "1400x850 / device pixel ratio 1 / Chrome headless",
+  "gpu": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A78B) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "loadSeconds": 0.56,
+  "motionFPS": 69.0,
+  "calls": 83,
+  "triangles": 56886,
+  "idleFramesPerHalfSecond": 0,
+  "browserErrors": []
+}

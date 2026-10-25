@@ -12,6 +12,7 @@ for _ in range(25):
     live._last-=.05
     live.tick()
 assert controller['open']>.999,controller['open']
+assert abs(bpy.data.objects['DoorLeft'].evaluated_get(bpy.context.evaluated_depsgraph_get()).matrix_world.translation.x+1.47)<.0001
 scene.camera.location=(20,-30,15)
 bpy.context.view_layer.update()
 live._hold=0
