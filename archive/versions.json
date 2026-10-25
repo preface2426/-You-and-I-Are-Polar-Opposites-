@@ -12,5 +12,12 @@
     "saved_local": "2026-10-25T13:55:58",
     "sha256": "1ad4044f7a9fa5c8dbef462037d21a7188f3d3156237c851df5f0bf264eba2a9",
     "bytes": 442376
+  },
+  {
+    "order": 3,
+    "file": "archive/versions/03/Store.blend",
+    "saved_local": "2026-10-25T13:57:22",
+    "sha256": "f4d7fd2d0bfe39e237a5c00948fd310db3cd99831cbe7fd271a2e836f647f52d",
+    "bytes": 558684
   }
 ]
