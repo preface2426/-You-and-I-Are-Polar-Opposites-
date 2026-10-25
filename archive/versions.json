@@ -19,5 +19,12 @@
     "saved_local": "2026-10-25T13:57:22",
     "sha256": "f4d7fd2d0bfe39e237a5c00948fd310db3cd99831cbe7fd271a2e836f647f52d",
     "bytes": 558684
+  },
+  {
+    "order": 4,
+    "file": "archive/versions/04/ConvenienceStore.blend",
+    "saved_local": "2026-10-25T14:03:15",
+    "sha256": "502cccdc066f916a22f28f252418ba7cf51f1a3ea356e6adb8719c47498386fa",
+    "bytes": 456845
   }
 ]
